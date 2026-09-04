@@ -1,12 +1,15 @@
 import {
   agentContextV1Schema,
+  humanBackedAgentStatusSchema,
   type Address,
   type AgentActionKind,
   type AgentActionPlan,
+  type AgentAuthorizationResult,
   type AgentContext,
   type AgentDecisionReason,
   type CareAgentContext,
   type GraphOnchainContext,
+  type HumanBackedAgentStatus,
 } from "@litclinic-ethonline/shared";
 
 const DEFAULT_MAX_WALLET_ACTIVITY_AGE_SECONDS = 90 * 24 * 60 * 60;
@@ -23,6 +26,13 @@ export type OnchainContextSource = {
     walletAddress: string;
     signal?: AbortSignal;
   }): Promise<GraphOnchainContext>;
+};
+
+export type WorldAuthorizationSource = {
+  resolveAgent(input: {
+    agentAddress: string;
+    signal?: AbortSignal;
+  }): Promise<HumanBackedAgentStatus>;
 };
 
 export type ComposeAgentContextOptions = {
@@ -145,8 +155,79 @@ export function planAgentAction(
   };
 }
 
+export type AuthorizeAgentPlanOptions = {
+  plan: AgentActionPlan;
+  agentAddress?: Address;
+  worldSource?: WorldAuthorizationSource;
+  signal?: AbortSignal;
+};
+
+export async function authorizeAgentPlan({
+  plan,
+  agentAddress,
+  worldSource,
+  signal,
+}: AuthorizeAgentPlanOptions): Promise<AgentAuthorizationResult> {
+  if (plan.decision !== "require_approval") {
+    return {
+      version: "1",
+      authorized: true,
+      reason: "approval-not-required",
+      worldVerificationUsed: false,
+    };
+  }
+  if (!agentAddress || !worldSource) {
+    return unavailableAuthorization();
+  }
+
+  let worldStatus: HumanBackedAgentStatus;
+  try {
+    const result = await worldSource.resolveAgent({ agentAddress, signal });
+    const parsed = humanBackedAgentStatusSchema.safeParse(result);
+    if (!parsed.success) return unavailableAuthorization();
+    worldStatus = parsed.data;
+  } catch {
+    return unavailableAuthorization();
+  }
+
+  if (!worldStatus.registered) {
+    return {
+      version: "1",
+      authorized: false,
+      reason: "agent-not-registered",
+      worldVerificationUsed: true,
+      worldStatus,
+    };
+  }
+  if (!worldStatus.humanBacked) {
+    return {
+      version: "1",
+      authorized: false,
+      reason: "agent-not-human-backed",
+      worldVerificationUsed: true,
+      worldStatus,
+    };
+  }
+  return {
+    version: "1",
+    authorized: true,
+    reason: "verified-human-backed-agent",
+    worldVerificationUsed: true,
+    worldStatus,
+  };
+}
+
 function secondsBetween(earlierIso: string, later: Date): number {
   const earlier = new Date(earlierIso);
   if (!Number.isFinite(earlier.getTime())) return Number.POSITIVE_INFINITY;
   return Math.max(0, Math.floor((later.getTime() - earlier.getTime()) / 1_000));
+}
+
+function unavailableAuthorization(): AgentAuthorizationResult {
+  return {
+    version: "1",
+    authorized: false,
+    reason: "verification-unavailable",
+    worldVerificationUsed: true,
+  };
 }
