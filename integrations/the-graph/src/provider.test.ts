@@ -27,8 +27,8 @@ function graphPayload(overrides: Record<string, unknown> = {}) {
       },
       walletSwaps: [
         {
+          hash: TRANSACTION_HASH,
           timestamp: unixSeconds("2026-09-03T23:50:00.000Z"),
-          transaction: { id: TRANSACTION_HASH },
         },
       ],
       latestSwaps: [

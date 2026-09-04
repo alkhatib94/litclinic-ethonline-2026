@@ -10,12 +10,10 @@ export const UNISWAP_V3_WALLET_ACTIVITY_QUERY = `
       first: $sampleSize
       orderBy: timestamp
       orderDirection: desc
-      where: { origin: $wallet }
+      where: { account: $wallet }
     ) {
+      hash
       timestamp
-      transaction {
-        id
-      }
     }
     latestSwaps: swaps(
       first: 1

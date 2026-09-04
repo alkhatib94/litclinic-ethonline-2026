@@ -28,12 +28,8 @@ const DEFAULT_SAMPLE_LIMIT = 20;
 const DEFAULT_MAX_FRESHNESS_SECONDS = 15 * 60;
 
 const graphSwapSchema = z.object({
+  hash: z.string().regex(/^0x[0-9a-fA-F]{64}$/u),
   timestamp: z.string().regex(/^\d+$/u),
-  transaction: z
-    .object({
-      id: z.string().regex(/^0x[0-9a-fA-F]{64}$/u),
-    })
-    .optional(),
 });
 
 const graphDataSchema = z.object({
@@ -233,9 +229,7 @@ export class TheGraphLiveProvider implements GraphOnchainContextProvider {
         ...(latestWalletSwap
           ? {
               lastActivityAt: graphTimestampToIso(latestWalletSwap.timestamp),
-              ...(latestWalletSwap.transaction
-                ? { latestTransactionHash: latestWalletSwap.transaction.id }
-                : {}),
+              latestTransactionHash: latestWalletSwap.hash,
             }
           : {}),
       },
