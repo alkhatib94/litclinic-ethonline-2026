@@ -1,0 +1,33 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "litclinic-ethonline-2026",
+      "devDependencies": {
+        "typescript": "^5.9.0",
+      },
+    },
+    "packages/config": {
+      "name": "@litclinic-ethonline/config",
+      "version": "0.0.0",
+    },
+    "packages/sdk": {
+      "name": "@litclinic-ethonline/sdk",
+      "version": "0.0.0",
+    },
+    "packages/shared": {
+      "name": "@litclinic-ethonline/shared",
+      "version": "0.0.0",
+    },
+  },
+  "packages": {
+    "@litclinic-ethonline/config": ["@litclinic-ethonline/config@workspace:packages/config"],
+
+    "@litclinic-ethonline/sdk": ["@litclinic-ethonline/sdk@workspace:packages/sdk"],
+
+    "@litclinic-ethonline/shared": ["@litclinic-ethonline/shared@workspace:packages/shared"],
+
+    "typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+  }
+}

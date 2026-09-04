@@ -1,0 +1,47 @@
+# Environment and local configuration
+.env
+.env.*
+!.env.example
+*.local
+
+# Dependencies and package manager state
+node_modules/
+
+# Framework and build output
+.next/
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+
+# Keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.jks
+
+# Sensitive directories
+private/
+secrets/
+credentials/
+.local-secrets/
+
+# Deployment and local tooling
+.vercel/
+.wrangler/
+.dev.vars
+
+# Logs, caches, and operating system files
+*.log
+.cache/
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp
