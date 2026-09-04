@@ -32,7 +32,17 @@ const findings = [];
 
 for (const file of files) {
   const normalized = file.replaceAll("\\", "/");
-  if (normalized === ".env.example") continue;
+  if (normalized === ".env.example") {
+    const lines = readFileSync(resolve(root, file), "utf8").split(/\r?\n/u);
+    for (const [index, line] of lines.entries()) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      if (!/^[A-Z][A-Z0-9_]*=$/u.test(trimmed)) {
+        findings.push(`${normalized}:${index + 1}: example values must remain empty`);
+      }
+    }
+    continue;
+  }
 
   if (forbiddenPaths.some((pattern) => pattern.test(normalized))) {
     findings.push(`${normalized}: forbidden sensitive path`);
