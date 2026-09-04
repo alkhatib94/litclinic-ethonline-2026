@@ -32,6 +32,8 @@ describe("World AgentKit authorization providers", () => {
       humanBacked: true,
       checkedAt: NOW.toISOString(),
       live: true,
+      worldEnvironment: "production",
+      verificationSource: "agentbook-production",
     });
     expect(JSON.stringify(status)).not.toContain(ANONYMOUS_HUMAN_ID);
     expect(status).not.toHaveProperty("humanId");

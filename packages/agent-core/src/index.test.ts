@@ -96,6 +96,8 @@ function worldStatus(
     humanBacked,
     checkedAt: NOW.toISOString(),
     live: true,
+    worldEnvironment: "production",
+    verificationSource: humanBacked ? "agentbook-production" : "unverified",
   };
 }
 
