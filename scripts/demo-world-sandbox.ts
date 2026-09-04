@@ -50,8 +50,23 @@ try {
   console.log(`worldEnvironment: ${status.worldEnvironment}`);
   console.log("Note: this is NOT production AgentBook registration.");
 } catch (error) {
-  const message =
-    error instanceof Error ? error.message : "Sandbox Selfie Check demo failed.";
+  const message = normalizeErrorMessage(error);
   console.error(`WORLD_SANDBOX_DEMO_ERROR: ${message}`);
+  if (/WORLD_ID_RP_ID|rp_id|RP ID/i.test(message)) {
+    console.error("");
+    console.error("STATUS: MANUAL_WORLD_SANDBOX_ACTION_REQUIRED");
+    console.error(
+      "Open Developer Portal -> your app -> RP / World ID settings and copy the real rp_id.",
+    );
+    console.error(
+      "Do not create rp_id by changing app_ to rp_ on the app_id.",
+    );
+  }
   process.exit(1);
+}
+
+function normalizeErrorMessage(error: unknown): string {
+  if (typeof error === "string" && error.trim()) return error;
+  if (error instanceof Error && error.message.trim()) return error.message;
+  return "Sandbox Selfie Check demo failed.";
 }

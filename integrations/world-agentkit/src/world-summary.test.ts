@@ -98,11 +98,23 @@ describe("World production and sandbox separation", () => {
     expect(summary.sandboxSelfie.verificationSource).toBe("world-sandbox");
   });
 
-  it("does not treat partial sandbox env as configured", () => {
+  it("rejects an RP ID that is just a rewritten app ID", () => {
     expect(() =>
       createSandboxSelfieProviderFromEnv({
-        WORLD_ID_APP_ID: "app_only",
+        WORLD_ID_APP_ID: "app_f00ed6dcd11601633b8792450c1bdc10",
+        WORLD_ID_RP_ID: "rp_f00ed6dcd11601633b8792450c1bdc10",
+        WORLD_ID_RP_SIGNING_KEY: `0x${"ab".repeat(32)}`,
       }),
-    ).toThrow();
+    ).toThrow(/real rp_id/i);
+  });
+
+  it("rejects an RP ID longer than the IDKit WASM format allows", () => {
+    expect(() =>
+      createSandboxSelfieProviderFromEnv({
+        WORLD_ID_APP_ID: "app_aaaaaaaaaaaaaaaa",
+        WORLD_ID_RP_ID: "rp_f00ed6dcd11601633b8792450c1bdc10",
+        WORLD_ID_RP_SIGNING_KEY: `0x${"ab".repeat(32)}`,
+      }),
+    ).toThrow(/up to 16/i);
   });
 });

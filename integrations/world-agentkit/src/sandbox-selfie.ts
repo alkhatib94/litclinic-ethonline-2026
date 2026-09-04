@@ -50,9 +50,14 @@ export function readSandboxSelfieConfig(
       "WORLD_ID_APP_ID must look like an official Developer Portal app_id.",
     );
   }
-  if (!/^rp_[a-zA-Z0-9]+$/u.test(rpId)) {
+  if (appId.slice(4).toLowerCase() === rpId.slice(3).toLowerCase()) {
     throw new WorldAgentkitConfigurationError(
-      "WORLD_ID_RP_ID must look like an official Developer Portal rp_id.",
+      "WORLD_ID_RP_ID matches WORLD_ID_APP_ID after the prefix. Copy the real rp_id from Developer Portal RP settings.",
+    );
+  }
+  if (!/^rp_[a-zA-Z0-9]{1,16}$/u.test(rpId)) {
+    throw new WorldAgentkitConfigurationError(
+      "WORLD_ID_RP_ID must be the Developer Portal rp_id (rp_ + up to 16 alphanumeric characters). Do not invent it by rewriting app_id.",
     );
   }
   return {

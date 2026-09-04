@@ -25,6 +25,7 @@ Observed:
 - Production AgentKit registration repeatedly reached World App verification and then timed out because Orb-backed Proof of Human is unavailable in the developer's region.
 - The published CLI source hardcodes production `app_id` / `agentbook-registration` via `createWorldBridgeStore()` and exposes no Sandbox, Selfie, Passport, or Document credential switch.
 - REGISTRATION.md mentions Base / Base Sepolia and `--network`, but installed CLI `0.2.0` help and current `cli/src/index.ts` do not expose `--network`. That mismatch is confusing for international hackathon developers.
+- IDKit `@worldcoin/idkit-core@4.2.4` WASM accepts `rp_id` values of the form `rp_` plus at most 16 alphanumeric characters. A value created by rewriting `app_...` into `rp_...` with the same 32-character suffix fails with a misleading `Invalid RP ID: must start with 'rp_'` error even though the string starts with `rp_`.
 
 ## Developer Portal Navigation
 
