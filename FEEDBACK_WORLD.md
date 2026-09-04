@@ -22,6 +22,9 @@ Observed:
 - Root `bun -e` cannot resolve `viem/accounts` because `viem` is a workspace package dependency, not a root dependency. The supported path is `bun run world:address`.
 - Official CLI `@worldcoin/agentkit-cli@0.2.0` status for agent `0x0Fa757cF486555C92Ec37B84024a937C3f5E2B30` returned `registered: false` with `humanId: null`.
 - `npx` may prompt to install the CLI package; use `npx --yes @worldcoin/agentkit-cli@0.2.0` to avoid interactive install prompts.
+- Production AgentKit registration repeatedly reached World App verification and then timed out because Orb-backed Proof of Human is unavailable in the developer's region.
+- The published CLI source hardcodes production `app_id` / `agentbook-registration` via `createWorldBridgeStore()` and exposes no Sandbox, Selfie, Passport, or Document credential switch.
+- REGISTRATION.md mentions Base / Base Sepolia and `--network`, but installed CLI `0.2.0` help and current `cli/src/index.ts` do not expose `--network`. That mismatch is confusing for international hackathon developers.
 
 ## Developer Portal Navigation
 
@@ -136,6 +139,9 @@ Observed:
 - Sandbox documentation describes IDKit configured with `environment: sandbox`.
 - The current AgentKit CLI registration interface documents no Sandbox flag and its source uses built-in registration configuration.
 - It is unclear which supported path connects the required Sandbox test to canonical AgentBook registration without building a separate IDKit flow that could be mistaken for AgentKit registration.
+- AgentKit Continuity, Proof of Human (Orb), Passport/Document, and Selfie Check are separate products, but prize language can read as if one Sandbox proof could satisfy AgentBook registration.
+- International developers without nearby Orb access have no obvious official no-Orb AgentKit registration path.
+- Selfie Check can be tested in Sandbox without Orb, but official docs do not say it can register an AgentBook agent.
 
 ## Missing Documentation
 
@@ -145,6 +151,8 @@ Requested:
 - Explicit documentation of `lookupHuman` error normalization.
 - A machine-readable status API that distinguishes unregistered from unavailable.
 - A documented Sandbox mode or supported Sandbox registration path for AgentKit CLI.
+- An explicit statement that Passport, Document, and Selfie Check cannot (or can, if true) satisfy AgentBook registration.
+- A documented path for developers without Orb access who still need AgentKit Continuity Sandbox evidence.
 
 ## Broken Behavior
 
@@ -161,9 +169,10 @@ Observed:
 - Sandbox App distribution requires manual Developer Portal enrollment and platform-specific tester access.
 - Human-backed registration requires interactive World verification and cannot be completed by an automated test.
 - The absence of a documented AgentKit CLI Sandbox mode blocks an honest end-to-end Sandbox qualification claim.
+- Production Proof of Human registration is effectively Orb-gated for this developer location; retries only reproduce verification timeouts.
 
 TODO:
 
 - Measure tester-access delay.
-- Complete the first remote Sandbox round trip.
-- Record screenshots and sanitized API evidence.
+- Complete the first remote Sandbox Selfie Check round trip.
+- Record screenshots and sanitized API evidence without fabricating AgentBook registration.

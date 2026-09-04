@@ -185,4 +185,4 @@ No Arc action, payment, medical inference, or transaction is executed.
 - Screenshots: `[TODO - capture after Sandbox and registered-agent demo]`
 - Relevant Git commits: `a6b38f5`, `3997c5a`, `61d8539`, `5b8f8d3`, `610d9e6` plus subsequent wallet-separation commits
 
-Current status: live AgentBook connectivity is verified for the configured agent wallet, but that agent is still unregistered. Sandbox App testing has not been executed. Full prize qualification is not yet claimed.
+Current status: live AgentBook connectivity is verified for the configured agent wallet, but that agent is still unregistered because production Orb verification is unavailable. Official Sandbox Selfie Check support is implemented in code and remains pending Developer Portal / Sandbox App enrollment. Full prize qualification is not yet claimed.
