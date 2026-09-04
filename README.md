@@ -122,7 +122,9 @@ The first adapter queries the Uniswap V3 Ethereum Subgraph through The Graph Net
 
 The decision engine requires approval when Graph data is stale, the index reports errors, no wallet activity is observed, or observed activity is too old. A normal workflow can continue only when both LitClinic permission and live Graph evidence pass.
 
-The integration is implemented and covered by offline tests. ETHOnline qualification is not yet claimed because no live gateway query has been demonstrated in this repository session.
+The integration is implemented, covered by offline tests, and demonstrated against The Graph Network gateway. On September 4, 2026, the live provider returned Ethereum block `25903730`, no indexing errors, and protocol data seven seconds behind the query time. The queried wallet had no observed Uniswap V3 activity, so the load-bearing decision changed to `require_approval`.
+
+The live-data and meaningful-reasoning requirements have been demonstrated locally. Final ETHOnline submission eligibility still requires publishing the repository and recording the required demo video.
 
 ## Demo
 
