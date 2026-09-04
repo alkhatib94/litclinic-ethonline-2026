@@ -54,4 +54,4 @@ Deployment targets are intentionally undecided. Applications should remain conta
 
 ## Current Implementation Status
 
-Only repository boundaries and minimal public types exist. Web, API, AI, partner, and contract functionality are not implemented.
+Phase 1 includes the versioned Care Agent Context contract, authenticated read-only SDK client, mock and remote provider adapters, and minimal context API. Web, AI inference, partner, payment, and contract functionality are not implemented.

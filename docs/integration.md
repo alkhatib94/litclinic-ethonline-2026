@@ -77,6 +77,6 @@ export interface PartnerAdapter<Input, Output> {
 
 Adapters should be independently configurable, testable, replaceable, and removable. A partner failure must not require changes to unrelated integrations.
 
-## Proposed First Interface
+## First Interface
 
-The first implementation should begin with a read-only health or capability endpoint and a local mock. Any authenticated or mutating endpoint requires a separate threat review and explicit approval.
+Phase 1 implements the read-only Care Agent Context boundary and a deterministic local mock. The upstream path remains configurable until an approved private LitClinic endpoint exists. Any mutating endpoint requires a separate threat review and explicit approval.

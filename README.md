@@ -4,7 +4,7 @@
 
 This repository is the standalone workspace for new LitClinic functionality developed during ETHOnline 2026. It starts as a minimal, security-conscious monorepo so the event architecture can evolve without exposing or coupling to the private production application.
 
-Current status: repository foundation only. Hackathon features are [To be implemented during ETHOnline].
+Current status: Phase 1 implements a read-only Care Agent Context Layer with a typed SDK, mock and remote providers, and a minimal API.
 
 ## Existing LitClinic Product
 
@@ -22,7 +22,7 @@ The extension is intended to support independently deployable modules for:
 - Onchain data access
 - A web or API surface when required
 
-The exact event scope is [To be implemented during ETHOnline].
+Phase 1 provides sanitized wallet context for a future healthcare coordination agent. It does not expose medical records or clinical data, run AI inference, request payments, or execute transactions.
 
 ## Architecture
 
@@ -34,17 +34,17 @@ The repository is organized around explicit boundaries:
 4. Smart contracts expose reviewed onchain interfaces.
 5. Secrets and private LitClinic implementation details stay outside this repository.
 
-See [Architecture](docs/architecture.md) and [Integration Boundary](docs/integration.md).
+See [Architecture](docs/architecture.md), [Integration Boundary](docs/integration.md), and [Care Agent Context Layer](docs/context-layer.md).
 
 ## Repository Structure
 
 ```text
 apps/
   web/          Optional public web application
-  api/          Optional extension API
+  api/          Care Agent Context HTTP API
 packages/
-  sdk/          Typed LitClinic boundary client
-  shared/       Shared public types
+  sdk/          Typed authenticated LitClinic client
+  shared/       Validated public context contract
   config/       Validated extension configuration
 contracts/      Hackathon-specific smart contracts
 integrations/   Independent partner adapters
@@ -52,7 +52,7 @@ docs/           Architecture, security, and disclosure
 scripts/        Local validation utilities
 ```
 
-Application and contract implementations are intentionally absent until the event scope is selected.
+The web application, partner adapters, AI inference, payments, and smart contracts remain intentionally unimplemented.
 
 ## Development
 
@@ -63,22 +63,35 @@ Prerequisites:
 
 ```bash
 bun install
-bun run check
+bun run typecheck
+bun test
+bun run secret:scan
 ```
 
-Development commands will be added with the first implemented application.
+Run the API in mock mode:
+
+```bash
+LITCLINIC_CONTEXT_MODE=mock bun run dev:api
+```
+
+On PowerShell:
+
+```powershell
+$env:LITCLINIC_CONTEXT_MODE="mock"
+bun run dev:api
+```
 
 ## Environment Variables
 
 Copy `.env.example` to a local ignored environment file and provide only development or test credentials. Never commit secrets.
 
-The planned configuration contract covers:
+The Phase 1 configuration contract covers:
 
-- LitClinic API endpoint and scoped access token
-- Chain ID and RPC endpoint
-- AI provider credential
-- Partner integration credentials
-- Webhook signing secret
+- Context mode
+- Approved LitClinic API base URL
+- Scoped service token
+- Configurable context endpoint path
+- Local API port
 
 No production values are included.
 
@@ -102,7 +115,13 @@ No partner integration is claimed or configured yet. Each selected integration w
 
 ## Demo
 
-[To be implemented during ETHOnline]
+Print deterministic sanitized mock context:
+
+```bash
+bun run demo:context 0x0000000000000000000000000000000000000001
+```
+
+The same command uses the remote provider when remote mode and its required environment variables are configured. It never prints the service token.
 
 ## License
 
