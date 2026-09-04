@@ -1,4 +1,11 @@
-export type Address = `0x${string}`;
+export {
+  careAgentContextV1Schema,
+  ethereumAddressSchema,
+  parseEthereumAddress,
+  type Address,
+  type CareAgentContext,
+  type CareAgentContextV1,
+} from "./care-agent-context";
 
 export type ApiSuccess<T> = {
   ok: true;
