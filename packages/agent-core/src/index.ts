@@ -35,8 +35,12 @@ export type WorldAuthorizationSource = {
   }): Promise<HumanBackedAgentStatus>;
 };
 
+/**
+ * Composes LitClinic + The Graph context for a USER wallet.
+ * World AgentBook resolution uses a separate configured AGENT wallet.
+ */
 export type ComposeAgentContextOptions = {
-  walletAddress: Address;
+  userWallet: Address;
   careSource: CareContextSource;
   onchainSource: OnchainContextSource;
   signal?: AbortSignal;
@@ -53,15 +57,15 @@ export class AgentContextValidationError extends Error {
 }
 
 export async function composeAgentContext({
-  walletAddress,
+  userWallet,
   careSource,
   onchainSource,
   signal,
   clock = () => new Date(),
 }: ComposeAgentContextOptions): Promise<AgentContext> {
   const [litclinic, onchain] = await Promise.all([
-    careSource.getContext({ walletAddress, signal }),
-    onchainSource.getContext({ walletAddress, signal }),
+    careSource.getContext({ walletAddress: userWallet, signal }),
+    onchainSource.getContext({ walletAddress: userWallet, signal }),
   ]);
   const composedAt = clock();
   if (!Number.isFinite(composedAt.getTime())) {
@@ -70,7 +74,7 @@ export async function composeAgentContext({
 
   const parsed = agentContextV1Schema.safeParse({
     version: "1",
-    wallet: { address: walletAddress },
+    wallet: { address: userWallet },
     litclinic,
     onchain,
     metadata: {
@@ -157,7 +161,10 @@ export function planAgentAction(
 
 export type AuthorizeAgentPlanOptions = {
   plan: AgentActionPlan;
+  /** World AgentBook agent wallet. Never the user wallet from Graph context. */
   agentAddress?: Address;
+  /** Optional user wallet; when set, must not equal agentAddress. */
+  userWallet?: Address;
   worldSource?: WorldAuthorizationSource;
   signal?: AbortSignal;
 };
@@ -165,6 +172,7 @@ export type AuthorizeAgentPlanOptions = {
 export async function authorizeAgentPlan({
   plan,
   agentAddress,
+  userWallet,
   worldSource,
   signal,
 }: AuthorizeAgentPlanOptions): Promise<AgentAuthorizationResult> {
@@ -179,6 +187,12 @@ export async function authorizeAgentPlan({
   if (!agentAddress || !worldSource) {
     return unavailableAuthorization();
   }
+  if (
+    userWallet &&
+    userWallet.toLowerCase() === agentAddress.toLowerCase()
+  ) {
+    return unavailableAuthorization();
+  }
 
   let worldStatus: HumanBackedAgentStatus;
   try {
@@ -190,6 +204,11 @@ export async function authorizeAgentPlan({
     return unavailableAuthorization();
   }
 
+  if (
+    worldStatus.agentAddress.toLowerCase() !== agentAddress.toLowerCase()
+  ) {
+    return unavailableAuthorization();
+  }
   if (!worldStatus.registered) {
     return {
       version: "1",

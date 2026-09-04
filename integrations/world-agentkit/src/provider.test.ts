@@ -119,6 +119,51 @@ describe("World AgentKit authorization providers", () => {
     expect(String(caught)).not.toContain(invalidSecret);
   });
 
+  it("derives a stable agent address from WORLD_AGENT_PRIVATE_KEY", () => {
+    const expectedAgent = "0x0Fa757cF486555C92Ec37B84024a937C3f5E2B30";
+    // Deterministic well-known test vector (not a production secret).
+    const knownKey =
+      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+    const runtimeA = createWorldAgentSignerRuntime(knownKey);
+    const runtimeB = createWorldAgentSignerRuntime(knownKey);
+
+    expect(runtimeA.agentAddress).toBe(runtimeB.agentAddress);
+    expect(runtimeA.agentAddress).not.toBe(expectedAgent);
+    expect(runtimeA.agentAddress).toMatch(/^0x[0-9a-fA-F]{40}$/u);
+  });
+
+  it("never uses a user or project wallet as the derived agent signer", () => {
+    const knownKey =
+      "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+    const userWallet = "0xd0482C09B1f1dBE2a74E4612234b0fFfE8E7819E";
+    const projectWallet = "0xD1f52E023ADeEbe738b720BEfD35459009aAaAaa";
+    const runtime = createWorldAgentSignerRuntime(knownKey);
+
+    expect(runtime.agentAddress.toLowerCase()).not.toBe(userWallet.toLowerCase());
+    expect(runtime.agentAddress.toLowerCase()).not.toBe(
+      projectWallet.toLowerCase(),
+    );
+  });
+
+  it("looks up the provided agentAddress, never a hard-coded project wallet", async () => {
+    const seen: string[] = [];
+    const provider = new LiveWorldAgentAuthorizationProvider({
+      agentBook: {
+        lookupHuman: async (agentAddress) => {
+          seen.push(agentAddress);
+          return null;
+        },
+      },
+      clock: () => NOW,
+    });
+    const agentAddress = "0x0Fa757cF486555C92Ec37B84024a937C3f5E2B30";
+
+    await provider.resolveAgent({ agentAddress });
+
+    expect(seen).toEqual([agentAddress]);
+    expect(seen[0]).not.toBe("0xD1f52E023ADeEbe738b720BEfD35459009aAaAaa");
+  });
+
   it("marks mock verification as non-live", async () => {
     const provider = new MockWorldAgentAuthorizationProvider({
       registered: true,

@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 import { createApiApp } from "./app";
 import { MockLitClinicContextProvider } from "./providers/mock";
 
+const USER_WALLET = "0xd0482C09B1f1dBE2a74E4612234b0fFfE8E7819E";
+const AGENT_WALLET = "0x0Fa757cF486555C92Ec37B84024a937C3f5E2B30";
 const WALLET = "0x0000000000000000000000000000000000000001";
 
 describe("care agent context API", () => {
@@ -78,7 +80,7 @@ describe("care agent context API", () => {
   it("uses Graph evidence in the returned agent plan", async () => {
     const graphContext: GraphOnchainContext = {
       version: "1",
-      wallet: { address: WALLET },
+      wallet: { address: USER_WALLET },
       network: { chainId: 1, name: "ethereum-mainnet" },
       activity: {
         protocol: "uniswap-v3",
@@ -111,11 +113,11 @@ describe("care agent context API", () => {
         registered: true,
         humanBacked: true,
       }),
-      configuredAgentAddress: WALLET,
+      configuredAgentAddress: AGENT_WALLET,
     });
 
     const response = await graphApp.request(
-      `/api/v1/agent-plan/${WALLET}?action=continue_workflow`,
+      `/api/v1/agent-plan/${USER_WALLET}?action=continue_workflow`,
     );
     const body = await response.json();
 
@@ -123,6 +125,10 @@ describe("care agent context API", () => {
     expect(body).toMatchObject({
       ok: true,
       data: {
+        context: {
+          wallet: { address: USER_WALLET },
+          onchain: { wallet: { address: USER_WALLET } },
+        },
         reasoning: {
           decision: "require_approval",
           reasons: ["NO_OBSERVED_ONCHAIN_ACTIVITY"],
@@ -136,6 +142,7 @@ describe("care agent context API", () => {
           reason: "verified-human-backed-agent",
           worldVerificationUsed: true,
           worldStatus: {
+            agentAddress: AGENT_WALLET,
             registered: true,
             humanBacked: true,
             live: false,
@@ -155,7 +162,7 @@ describe("care agent context API", () => {
       }),
     });
 
-    const response = await worldApp.request(`/api/v1/world/agent/${WALLET}`);
+    const response = await worldApp.request(`/api/v1/world/agent/${AGENT_WALLET}`);
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -163,7 +170,7 @@ describe("care agent context API", () => {
       ok: true,
       data: {
         provider: "world-agentkit",
-        agentAddress: WALLET,
+        agentAddress: AGENT_WALLET,
         registered: true,
         humanBacked: true,
         live: false,

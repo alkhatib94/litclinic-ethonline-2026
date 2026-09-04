@@ -14,6 +14,9 @@ import {
 } from "./index";
 
 const WALLET = "0x0000000000000000000000000000000000000001";
+const AGENT_WALLET = "0x0Fa757cF486555C92Ec37B84024a937C3f5E2B30";
+const OTHER_USER_WALLET = "0xd0482C09B1f1dBE2a74E4612234b0fFfE8E7819E";
+const PROJECT_WALLET = "0xD1f52E023ADeEbe738b720BEfD35459009aAaAaa";
 const NOW = new Date("2026-09-04T00:00:00.000Z");
 
 function careContext(): CareAgentContext {
@@ -83,11 +86,12 @@ function agentContext(onchain = graphContext()): AgentContext {
 function worldStatus(
   registered: boolean,
   humanBacked: boolean,
+  agentAddress: `0x${string}` = AGENT_WALLET,
 ): HumanBackedAgentStatus {
   return {
     version: "1",
     provider: "world-agentkit",
-    agentAddress: WALLET,
+    agentAddress,
     registered,
     humanBacked,
     checkedAt: NOW.toISOString(),
@@ -98,7 +102,7 @@ function worldStatus(
 describe("agent context and decision engine", () => {
   it("composes private and live Graph context for the same wallet", async () => {
     const context = await composeAgentContext({
-      walletAddress: WALLET,
+      userWallet: WALLET,
       careSource: {
         getContext: async () => careContext(),
       },
@@ -175,7 +179,7 @@ describe("agent context and decision engine", () => {
 
     await expect(
       composeAgentContext({
-        walletAddress: WALLET,
+        userWallet: WALLET,
         careSource: {
           getContext: async () => careContext(),
         },
@@ -201,7 +205,8 @@ describe("agent context and decision engine", () => {
 
     const authorization = await authorizeAgentPlan({
       plan,
-      agentAddress: WALLET,
+      userWallet: WALLET,
+      agentAddress: AGENT_WALLET,
       worldSource: {
         resolveAgent: async () => worldStatus(true, true),
       },
@@ -228,7 +233,8 @@ describe("agent context and decision engine", () => {
 
     const authorization = await authorizeAgentPlan({
       plan,
-      agentAddress: WALLET,
+      userWallet: WALLET,
+      agentAddress: AGENT_WALLET,
       worldSource: {
         resolveAgent: async () => worldStatus(false, false),
       },
@@ -255,7 +261,8 @@ describe("agent context and decision engine", () => {
 
     const authorization = await authorizeAgentPlan({
       plan,
-      agentAddress: WALLET,
+      userWallet: WALLET,
+      agentAddress: AGENT_WALLET,
       worldSource: {
         resolveAgent: async () => {
           throw new Error("World unavailable");
@@ -280,7 +287,8 @@ describe("agent context and decision engine", () => {
 
     const authorization = await authorizeAgentPlan({
       plan,
-      agentAddress: WALLET,
+      userWallet: WALLET,
+      agentAddress: AGENT_WALLET,
       worldSource: { resolveAgent },
     });
 
@@ -291,5 +299,196 @@ describe("agent context and decision engine", () => {
       worldVerificationUsed: false,
     });
     expect(resolveAgent).not.toHaveBeenCalled();
+  });
+
+  it("sends USER wallet to Graph/LitClinic and AGENT wallet to AgentBook", async () => {
+    const graphWallets: string[] = [];
+    const careWallets: string[] = [];
+    const agentBookWallets: string[] = [];
+
+    const context = await composeAgentContext({
+      userWallet: OTHER_USER_WALLET,
+      careSource: {
+        getContext: async ({ walletAddress }) => {
+          careWallets.push(walletAddress);
+          return {
+            ...careContext(),
+            wallet: { address: OTHER_USER_WALLET },
+          };
+        },
+      },
+      onchainSource: {
+        getContext: async ({ walletAddress }) => {
+          graphWallets.push(walletAddress);
+          return {
+            ...graphContext({
+              observedSwapCount: 0,
+              hasObservedActivity: false,
+              lastActivityAt: undefined,
+            }),
+            wallet: { address: OTHER_USER_WALLET },
+          };
+        },
+      },
+      clock: () => NOW,
+    });
+    const plan = planAgentAction(context, {
+      action: "continue_workflow",
+      now: NOW,
+    });
+    await authorizeAgentPlan({
+      plan,
+      userWallet: OTHER_USER_WALLET,
+      agentAddress: AGENT_WALLET,
+      worldSource: {
+        resolveAgent: async ({ agentAddress }) => {
+          agentBookWallets.push(agentAddress);
+          return worldStatus(true, true, AGENT_WALLET);
+        },
+      },
+    });
+
+    expect(careWallets).toEqual([OTHER_USER_WALLET]);
+    expect(graphWallets).toEqual([OTHER_USER_WALLET]);
+    expect(agentBookWallets).toEqual([AGENT_WALLET]);
+    expect(agentBookWallets[0]).not.toBe(OTHER_USER_WALLET);
+    expect(agentBookWallets[0]).not.toBe(PROJECT_WALLET);
+  });
+
+  it("changing USER wallet does not change AgentBook AGENT wallet", async () => {
+    const agentBookWallets: string[] = [];
+    const plan = planAgentAction(
+      agentContext(
+        graphContext({
+          observedSwapCount: 0,
+          hasObservedActivity: false,
+          lastActivityAt: undefined,
+        }),
+      ),
+      { action: "continue_workflow", now: NOW },
+    );
+
+    for (const userWallet of [WALLET, OTHER_USER_WALLET] as const) {
+      await authorizeAgentPlan({
+        plan,
+        userWallet,
+        agentAddress: AGENT_WALLET,
+        worldSource: {
+          resolveAgent: async ({ agentAddress }) => {
+            agentBookWallets.push(agentAddress);
+            return worldStatus(true, true, AGENT_WALLET);
+          },
+        },
+      });
+    }
+
+    expect(agentBookWallets).toEqual([AGENT_WALLET, AGENT_WALLET]);
+  });
+
+  it("fails closed when USER wallet equals AGENT wallet", async () => {
+    const plan = planAgentAction(
+      agentContext(
+        graphContext({
+          observedSwapCount: 0,
+          hasObservedActivity: false,
+          lastActivityAt: undefined,
+        }),
+      ),
+      { action: "continue_workflow", now: NOW },
+    );
+    const resolveAgent = vi.fn(async () => worldStatus(true, true, WALLET));
+
+    const authorization = await authorizeAgentPlan({
+      plan,
+      userWallet: WALLET,
+      agentAddress: WALLET,
+      worldSource: { resolveAgent },
+    });
+
+    expect(authorization.reason).toBe("verification-unavailable");
+    expect(authorization.authorized).toBe(false);
+    expect(resolveAgent).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when AgentBook returns a different agent address", async () => {
+    const plan = planAgentAction(
+      agentContext(
+        graphContext({
+          observedSwapCount: 0,
+          hasObservedActivity: false,
+          lastActivityAt: undefined,
+        }),
+      ),
+      { action: "continue_workflow", now: NOW },
+    );
+
+    const authorization = await authorizeAgentPlan({
+      plan,
+      userWallet: OTHER_USER_WALLET,
+      agentAddress: AGENT_WALLET,
+      worldSource: {
+        resolveAgent: async () => worldStatus(true, true, OTHER_USER_WALLET),
+      },
+    });
+
+    expect(authorization).toEqual({
+      version: "1",
+      authorized: false,
+      reason: "verification-unavailable",
+      worldVerificationUsed: true,
+    });
+  });
+
+  it("fails closed when the agent signer is missing", async () => {
+    const plan = planAgentAction(
+      agentContext(
+        graphContext({
+          observedSwapCount: 0,
+          hasObservedActivity: false,
+          lastActivityAt: undefined,
+        }),
+      ),
+      { action: "continue_workflow", now: NOW },
+    );
+
+    const authorization = await authorizeAgentPlan({
+      plan,
+      userWallet: OTHER_USER_WALLET,
+      worldSource: {
+        resolveAgent: async () => worldStatus(true, true),
+      },
+    });
+
+    expect(authorization.authorized).toBe(false);
+    expect(authorization.reason).toBe("verification-unavailable");
+  });
+
+  it("never uses the LitClinic project wallet as AgentBook agent", async () => {
+    const plan = planAgentAction(
+      agentContext(
+        graphContext({
+          observedSwapCount: 0,
+          hasObservedActivity: false,
+          lastActivityAt: undefined,
+        }),
+      ),
+      { action: "continue_workflow", now: NOW },
+    );
+    const resolveAgent = vi.fn(async ({ agentAddress }) =>
+      worldStatus(true, true, agentAddress as `0x${string}`),
+    );
+
+    await authorizeAgentPlan({
+      plan,
+      userWallet: OTHER_USER_WALLET,
+      agentAddress: AGENT_WALLET,
+      worldSource: { resolveAgent },
+    });
+
+    expect(resolveAgent).toHaveBeenCalledWith({
+      agentAddress: AGENT_WALLET,
+      signal: undefined,
+    });
+    expect(resolveAgent.mock.calls[0]?.[0].agentAddress).not.toBe(PROJECT_WALLET);
   });
 });

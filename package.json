@@ -23,6 +23,7 @@
     "typecheck": "bun run type-check",
     "type-check": "bunx tsc --project tsconfig.json --noEmit",
     "secret:scan": "node scripts/scan-secrets.mjs",
+    "world:address": "bun run scripts/world-address.ts",
     "world:status": "bun run scripts/world-status.ts"
   },
   "devDependencies": {

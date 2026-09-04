@@ -12,11 +12,12 @@ if (
   (scenario !== "verified" && scenario !== "unregistered")
 ) {
   console.error(
-    "Usage: bun run demo:world:mock 0x<40 hexadecimal characters> <verified|unregistered>",
+    "Usage: bun run demo:world:mock <AGENT_WALLET> <verified|unregistered>",
   );
   process.exit(1);
 }
 
+const agentAddress = addressResult.data;
 const plan: AgentActionPlan = {
   version: "1",
   action: "continue_workflow",
@@ -32,17 +33,22 @@ const plan: AgentActionPlan = {
 const verified = scenario === "verified";
 const authorization = await authorizeAgentPlan({
   plan,
-  agentAddress: addressResult.data,
+  agentAddress,
   worldSource: new MockWorldAgentAuthorizationProvider({
     registered: verified,
     humanBacked: verified,
   }),
 });
 
+console.log(`AGENT WALLET: ${agentAddress}`);
 console.log("LIVE WORLD AGENTKIT: NO");
+console.log(`AGENTBOOK REGISTERED: ${authorization.worldStatus?.registered ? "YES" : "NO"}`);
 console.log(
   `HUMAN-BACKED AGENT: ${
     authorization.worldStatus?.humanBacked ? "VERIFIED" : "NOT VERIFIED"
   }`,
+);
+console.log(
+  `FINAL EXECUTION PERMISSION: ${authorization.authorized ? "ALLOWED" : "BLOCKED"}`,
 );
 console.log(JSON.stringify(authorization, null, 2));

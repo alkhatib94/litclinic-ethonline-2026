@@ -206,7 +206,7 @@ export function createApiApp({
 
     try {
       const data = await composeAgentContext({
-        walletAddress: walletResult.data,
+        userWallet: walletResult.data,
         careSource: provider,
         onchainSource: onchainProvider,
         signal: context.req.raw.signal,
@@ -254,7 +254,7 @@ export function createApiApp({
 
     try {
       const agentContext = await composeAgentContext({
-        walletAddress: walletResult.data,
+        userWallet: walletResult.data,
         careSource: provider,
         onchainSource: onchainProvider,
         signal: context.req.raw.signal,
@@ -262,6 +262,7 @@ export function createApiApp({
       const plan = planAgentAction(agentContext, { action });
       const worldAuthorization = await authorizeAgentPlan({
         plan,
+        userWallet: walletResult.data,
         agentAddress: configuredAgentAddress,
         worldSource: worldProvider,
         signal: context.req.raw.signal,

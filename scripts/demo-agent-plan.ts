@@ -22,7 +22,7 @@ try {
   });
   const onchainSource = createTheGraphProviderFromEnv(process.env);
   const context = await composeAgentContext({
-    walletAddress: walletResult.data,
+    userWallet: walletResult.data,
     careSource,
     onchainSource,
   });
