@@ -18,6 +18,7 @@
         "@litclinic-ethonline/sdk": "workspace:*",
         "@litclinic-ethonline/shared": "workspace:*",
         "@litclinic-ethonline/the-graph": "workspace:*",
+        "@litclinic-ethonline/world-agentkit": "workspace:*",
         "hono": "^4.9.0",
       },
     },
@@ -27,6 +28,15 @@
       "dependencies": {
         "@litclinic-ethonline/shared": "workspace:*",
         "zod": "^4.1.5",
+      },
+    },
+    "integrations/world-agentkit": {
+      "name": "@litclinic-ethonline/world-agentkit",
+      "version": "0.0.0",
+      "dependencies": {
+        "@litclinic-ethonline/shared": "workspace:*",
+        "@worldcoin/agentkit": "0.2.1",
+        "viem": "^2.48.4",
       },
     },
     "packages/agent-core": {
@@ -72,6 +82,8 @@
     "@litclinic-ethonline/shared": ["@litclinic-ethonline/shared@workspace:packages/shared"],
 
     "@litclinic-ethonline/the-graph": ["@litclinic-ethonline/the-graph@workspace:integrations/the-graph"],
+
+    "@litclinic-ethonline/world-agentkit": ["@litclinic-ethonline/world-agentkit@workspace:integrations/world-agentkit"],
 
     "@noble/ciphers": ["@noble/ciphers@1.3.0", "", {}, "sha512-2I0gnIVPtfnMw9ee9h1dJG7tp81+8Ob3OJb3Mv37rx5L40/b0i7djjCVvGOVqc9AEIQyvyu1i6ypKdFw8R8gQw=="],
 
@@ -144,6 +156,12 @@
     "@vitest/spy": ["@vitest/spy@4.1.11", "", {}, "sha512-apNa/prQy2qCeywhnixOHPRCgGNhvg7T4Dapfl1GahLp/R+uhBm5cPyFoNVyqsNd2h1nJxL6BqqdIjiABL60YA=="],
 
     "@vitest/utils": ["@vitest/utils@4.1.11", "", { "dependencies": { "@vitest/pretty-format": "4.1.11", "convert-source-map": "^2.0.0", "tinyrainbow": "^3.1.0" } }, "sha512-zTCVGpyFsGWBhllOyKlTw/vnr6D9qxsfSDyfbyZmTyjHw5N/VuvzHpHoQjm2ZJzn4RJgx5w4r7V0er69CmLgPQ=="],
+
+    "@worldcoin/agentkit": ["@worldcoin/agentkit@0.2.1", "", { "dependencies": { "@worldcoin/agentkit-core": "^0.2.1", "@x402/core": "^2.4.0" } }, "sha512-UTq4BBBTP1bt2wfrxuIAMAJaqByR5neBb7TESJfSXDfFGETItm5kp+2MMqYFS32xG4xuRVk4BZw06cToemKgGw=="],
+
+    "@worldcoin/agentkit-core": ["@worldcoin/agentkit-core@0.2.1", "", { "dependencies": { "@noble/curves": "^1.9.1", "@scure/base": "^1.2.6", "viem": "^2.46.2", "zod": "^3.24.2" } }, "sha512-gfZf/GOP7DB8DVpXJZlYE58ZovrQrUezQ970NVd/oKu+XkwjY3CuLU3o304D4lrv5tdY4mqlhVroi6bELa3Meg=="],
+
+    "@x402/core": ["@x402/core@2.25.0", "", { "dependencies": { "zod": "^3.24.2" } }, "sha512-5Ys0XYz3FKutxVKoXC46R/XPT/oaAbuj7ahzrlVHwQxZJPH9u6u91IOh0ztz+7G/zYGsaXR8l3ety205QtEnUw=="],
 
     "abitype": ["abitype@1.2.3", "", { "peerDependencies": { "typescript": ">=5.0.4", "zod": "^3.22.0 || ^4.0.0" }, "optionalPeers": ["typescript", "zod"] }, "sha512-Ofer5QUnuUdTFsBRwARMoWKOH1ND5ehwYhJ3OJ/BQO+StkwQjHw0XyVh4vDttzHB7QOFhPHa/o413PJ82gU/Tg=="],
 
@@ -246,5 +264,9 @@
     "ws": ["ws@8.21.0", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": ">=5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-Vsp28b7DRcimFQvrqu2Wek3z1iYxDCWqHYB8Qsnk/S4RfaCQzPGPyBNuVjJV3cd6UiKtUtp6sNM77gWvzcCH+g=="],
 
     "zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
+
+    "@worldcoin/agentkit-core/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
+
+    "@x402/core/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
   }
 }

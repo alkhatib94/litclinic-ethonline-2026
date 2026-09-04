@@ -19,6 +19,15 @@ export {
   type GraphOnchainContext,
   type GraphOnchainContextV1,
 } from "./graph-onchain-context";
+export {
+  agentAuthorizationReasonSchema,
+  agentAuthorizationResultSchema,
+  humanBackedAgentStatusSchema,
+  type AgentAuthorizationReason,
+  type AgentAuthorizationResult,
+  type FinalAgentPlan,
+  type HumanBackedAgentStatus,
+} from "./world-agent-authorization";
 
 export type ApiSuccess<T> = {
   ok: true;

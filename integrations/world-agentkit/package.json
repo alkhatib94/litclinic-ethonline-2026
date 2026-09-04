@@ -1,0 +1,14 @@
+{
+  "name": "@litclinic-ethonline/world-agentkit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@litclinic-ethonline/shared": "workspace:*",
+    "@worldcoin/agentkit": "0.2.1",
+    "viem": "^2.48.4"
+  }
+}
