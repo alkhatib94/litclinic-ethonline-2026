@@ -1,0 +1,14 @@
+{
+  "name": "@litclinic-ethonline/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/server.ts"
+  },
+  "dependencies": {
+    "@litclinic-ethonline/sdk": "workspace:*",
+    "@litclinic-ethonline/shared": "workspace:*",
+    "hono": "^4.9.0"
+  }
+}
