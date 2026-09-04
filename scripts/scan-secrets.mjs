@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
 import process from "node:process";
 
@@ -32,8 +32,11 @@ const findings = [];
 
 for (const file of files) {
   const normalized = file.replaceAll("\\", "/");
+  const absolutePath = resolve(root, file);
+  if (!existsSync(absolutePath)) continue;
+
   if (normalized === ".env.example") {
-    const lines = readFileSync(resolve(root, file), "utf8").split(/\r?\n/u);
+    const lines = readFileSync(absolutePath, "utf8").split(/\r?\n/u);
     for (const [index, line] of lines.entries()) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) continue;
@@ -53,7 +56,7 @@ for (const file of files) {
     continue;
   }
 
-  const buffer = readFileSync(resolve(root, file));
+  const buffer = readFileSync(absolutePath);
   if (buffer.includes(0)) continue;
   const text = buffer.toString("utf8");
 
