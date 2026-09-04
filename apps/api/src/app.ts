@@ -1,5 +1,6 @@
 import {
   AgentContextValidationError,
+  authorizeAgentPlan,
   composeAgentContext,
   planAgentAction,
 } from "@litclinic-ethonline/agent-core";
@@ -16,6 +17,7 @@ import {
   ethereumAddressSchema,
   type ApiFailure,
   type ApiSuccess,
+  type Address,
   type CareAgentContext,
 } from "@litclinic-ethonline/shared";
 import {
@@ -25,6 +27,13 @@ import {
   TheGraphTimeoutError,
   type GraphOnchainContextProvider,
 } from "@litclinic-ethonline/the-graph";
+import {
+  WorldAgentkitAbortError,
+  WorldAgentkitError,
+  WorldAgentkitInvalidAddressError,
+  WorldAgentkitTimeoutError,
+  type WorldAgentAuthorizationProvider,
+} from "@litclinic-ethonline/world-agentkit";
 import { Hono } from "hono";
 
 import type { LitClinicContextProvider } from "./providers/types";
@@ -32,9 +41,16 @@ import type { LitClinicContextProvider } from "./providers/types";
 export type CreateApiAppOptions = {
   provider: LitClinicContextProvider;
   onchainProvider?: GraphOnchainContextProvider;
+  worldProvider?: WorldAgentAuthorizationProvider;
+  configuredAgentAddress?: Address;
 };
 
-export function createApiApp({ provider, onchainProvider }: CreateApiAppOptions) {
+export function createApiApp({
+  provider,
+  onchainProvider,
+  worldProvider,
+  configuredAgentAddress,
+}: CreateApiAppOptions) {
   const app = new Hono();
 
   app.use("*", async (context, next) => {
@@ -49,8 +65,43 @@ export function createApiApp({ provider, onchainProvider }: CreateApiAppOptions)
       status: "healthy",
       mode: provider.mode,
       graph: onchainProvider ? "live" : "unconfigured",
+      world: worldProvider?.mode ?? "unconfigured",
     }),
   );
+
+  app.get("/api/v1/world/agent/:address", async (context) => {
+    if (!worldProvider) {
+      return context.json<ApiFailure>(
+        {
+          ok: false,
+          code: "WORLD_PROVIDER_UNCONFIGURED",
+          message: "World AgentKit is not configured.",
+        },
+        503,
+      );
+    }
+
+    try {
+      const data = await worldProvider.resolveAgent({
+        agentAddress: context.req.param("address"),
+        signal: context.req.raw.signal,
+      });
+      return context.json({ ok: true, data });
+    } catch (error) {
+      if (error instanceof WorldAgentkitInvalidAddressError) {
+        return context.json<ApiFailure>(
+          {
+            ok: false,
+            code: "INVALID_AGENT_ADDRESS",
+            message: "A valid agent wallet address is required.",
+          },
+          400,
+        );
+      }
+      const mapped = mapWorldError(error);
+      return context.json<ApiFailure>(mapped.body, mapped.status);
+    }
+  });
 
   app.get("/api/v1/context/:wallet", async (context) => {
     const walletResult = ethereumAddressSchema.safeParse(context.req.param("wallet"));
@@ -209,12 +260,35 @@ export function createApiApp({ provider, onchainProvider }: CreateApiAppOptions)
         signal: context.req.raw.signal,
       });
       const plan = planAgentAction(agentContext, { action });
+      const worldAuthorization = await authorizeAgentPlan({
+        plan,
+        agentAddress: configuredAgentAddress,
+        worldSource: worldProvider,
+        signal: context.req.raw.signal,
+      });
+      const data = {
+        context: agentContext,
+        reasoning: plan,
+        worldAuthorization,
+        finalExecutionPermission: worldAuthorization.authorized,
+      };
+      if (
+        plan.decision === "require_approval" &&
+        worldAuthorization.reason === "verification-unavailable"
+      ) {
+        return context.json(
+          {
+            ok: false,
+            code: "WORLD_VERIFICATION_UNAVAILABLE",
+            message: "Required World AgentKit verification could not be completed.",
+            data,
+          },
+          503,
+        );
+      }
       return context.json({
         ok: true,
-        data: {
-          context: agentContext,
-          plan,
-        },
+        data,
       });
     } catch (error) {
       const mapped = mapAgentContextError(error);
@@ -290,6 +364,47 @@ function mapAgentContextError(error: unknown): MappedAgentError {
       ok: false,
       code: "INTERNAL_ERROR",
       message: "The agent context request could not be completed.",
+    },
+    status: 500,
+  };
+}
+
+function mapWorldError(error: unknown): MappedAgentError {
+  if (error instanceof WorldAgentkitTimeoutError) {
+    return {
+      body: {
+        ok: false,
+        code: "WORLD_VERIFICATION_TIMEOUT",
+        message: "World AgentKit verification timed out.",
+      },
+      status: 504,
+    };
+  }
+  if (error instanceof WorldAgentkitAbortError) {
+    return {
+      body: {
+        ok: false,
+        code: "REQUEST_ABORTED",
+        message: "The World AgentKit request was aborted.",
+      },
+      status: 503,
+    };
+  }
+  if (error instanceof WorldAgentkitError) {
+    return {
+      body: {
+        ok: false,
+        code: "WORLD_VERIFICATION_UNAVAILABLE",
+        message: "World AgentKit verification could not be completed.",
+      },
+      status: 503,
+    };
+  }
+  return {
+    body: {
+      ok: false,
+      code: "INTERNAL_ERROR",
+      message: "The World AgentKit request could not be completed.",
     },
     status: 500,
   };

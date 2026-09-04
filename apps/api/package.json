@@ -11,6 +11,7 @@
     "@litclinic-ethonline/sdk": "workspace:*",
     "@litclinic-ethonline/shared": "workspace:*",
     "@litclinic-ethonline/the-graph": "workspace:*",
+    "@litclinic-ethonline/world-agentkit": "workspace:*",
     "hono": "^4.9.0"
   }
 }
