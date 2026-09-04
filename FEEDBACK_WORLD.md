@@ -19,6 +19,9 @@ Observed:
 - `createAgentBookVerifier({ client })` accepted an injected viem public client and worked with the repository's strict TypeScript configuration.
 - A live canonical AgentBook lookup completed successfully and returned unregistered for the test address.
 - Agent registration is correctly separated from request-time lookup.
+- Root `bun -e` cannot resolve `viem/accounts` because `viem` is a workspace package dependency, not a root dependency. The supported path is `bun run world:address`.
+- Official CLI `@worldcoin/agentkit-cli@0.2.0` status for agent `0x0Fa757cF486555C92Ec37B84024a937C3f5E2B30` returned `registered: false` with `humanId: null`.
+- `npx` may prompt to install the CLI package; use `npx --yes @worldcoin/agentkit-cli@0.2.0` to avoid interactive install prompts.
 
 ## Developer Portal Navigation
 

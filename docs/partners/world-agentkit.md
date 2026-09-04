@@ -30,6 +30,26 @@ LitClinic safe context + The Graph live context
 
 Removing or failing World AgentKit makes the privileged path fail closed with `verification-unavailable`. When reasoning returns `continue`, World lookup is skipped and the result is `approval-not-required`.
 
+## Wallet Role Separation
+
+These three addresses are never interchangeable:
+
+1. **USER WALLET** - the wallet whose LitClinic and The Graph context is analyzed. CLI argument to `bun run demo:world <USER_WALLET>`.
+2. **AGENT WALLET** - derived only from `WORLD_AGENT_PRIVATE_KEY`. This is the address AgentBook looks up. Expected public address for this submission: `0x0Fa757cF486555C92Ec37B84024a937C3f5E2B30`.
+3. **LITCLINIC PROJECT WALLET** - `0xD1f52E023ADeEbe738b720BEfD35459009aAaAaa`. Not used as the user context wallet and not used as the AgentBook agent.
+
+Pipeline:
+
+```text
+USER WALLET -> LitClinic + The Graph -> Care Agent reasoning
+  -> require_approval
+  -> AGENT WALLET (from WORLD_AGENT_PRIVATE_KEY)
+  -> World AgentBook
+  -> finalExecutionPermission
+```
+
+Changing the USER WALLET argument must not change the AGENT WALLET. Authorization fails closed if USER and AGENT addresses are equal.
+
 ## Official AgentKit APIs
 
 The integration is pinned to `@worldcoin/agentkit` version `0.2.1`, verified against the official SDK reference on September 4, 2026.
@@ -111,19 +131,21 @@ bun run demo:world <user-wallet> continue_workflow
 
 ## Agent Registration
 
-Registration is intentionally manual. The official command is:
+Registration is intentionally manual. Prefer the pinned CLI version:
 
 ```bash
-npx @worldcoin/agentkit-cli register <agent-address>
+npx --yes @worldcoin/agentkit-cli@0.2.0 register 0x0Fa757cF486555C92Ec37B84024a937C3f5E2B30
 ```
 
 Check status without registration:
 
 ```bash
-npx @worldcoin/agentkit-cli status <agent-address>
+npx --yes @worldcoin/agentkit-cli@0.2.0 status 0x0Fa757cF486555C92Ec37B84024a937C3f5E2B30
+bun run world:address
+bun run world:status 0x0Fa757cF486555C92Ec37B84024a937C3f5E2B30
 ```
 
-Registration opens a World verification flow and submits to AgentBook through the official hosted relay by default. Do not run registration until the agent address and intended environment have been reviewed.
+Registration opens a World verification flow and submits to AgentBook through the official hosted relay by default. Do not run registration until the agent address and intended environment have been reviewed. Do not register the user wallet or the LitClinic project wallet as the agent.
 
 ## World ID Sandbox Requirement
 
@@ -153,12 +175,14 @@ No Arc action, payment, medical inference, or transaction is executed.
 
 ## Qualification Evidence
 
-- Agent wallet: `[TODO - configure and review local agent signer]`
-- AgentBook live lookup: `UNREGISTERED` for `0x0000000000000000000000000000000000000001` at `2026-09-04T11:57:21.784Z`
-- Sandbox test timestamp: `[TODO - manual Sandbox App test required]`
-- Successful human-backed verification: `[TODO - requires manual registration and World verification]`
+- Package: `@worldcoin/agentkit@0.2.1`, CLI `@worldcoin/agentkit-cli@0.2.0` (pinned; do not silently upgrade)
+- Agent public wallet: `0x0Fa757cF486555C92Ec37B84024a937C3f5E2B30` (verified via `bun run world:address`)
+- User vs agent role separation: enforced in `composeAgentContext` (`userWallet`), `authorizeAgentPlan` (`userWallet` + `agentAddress`), and `demo:world` summary output
+- AgentBook live lookup: `registered: false`, `humanId: null` for agent `0x0Fa757cF486555C92Ec37B84024a937C3f5E2B30` (CLI status, September 4, 2026; raw humanId never stored in app output)
+- Earlier connectivity check: `UNREGISTERED` for `0x0000000000000000000000000000000000000001` at `2026-09-04T11:57:21.784Z`
+- Human-backed verification: not yet observed (agent unregistered; World App registration required)
+- Sandbox test timestamp: `[TODO - manual Sandbox App / Developer Portal enrollment required]`
 - Screenshots: `[TODO - capture after Sandbox and registered-agent demo]`
-- API response evidence: `[TODO - capture after configured-agent live demo]`
-- Relevant Git commits: `a6b38f5`, `3997c5a`, `61d8539`, `5b8f8d3`
+- Relevant Git commits: `a6b38f5`, `3997c5a`, `61d8539`, `5b8f8d3`, `610d9e6` plus subsequent wallet-separation commits
 
-Current status: live AgentBook connectivity is verified, but the tested address is unregistered. Full prize qualification is not yet claimed.
+Current status: live AgentBook connectivity is verified for the configured agent wallet, but that agent is still unregistered. Sandbox App testing has not been executed. Full prize qualification is not yet claimed.
