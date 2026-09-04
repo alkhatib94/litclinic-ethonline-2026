@@ -1,0 +1,23 @@
+{
+  "name": "litclinic-ethonline-2026",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.3.0",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "integrations/*"
+  ],
+  "scripts": {
+    "check": "bun run type-check && bun run secret:scan",
+    "type-check": "bunx tsc --project tsconfig.json --noEmit",
+    "secret:scan": "node scripts/scan-secrets.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0"
+  }
+}
