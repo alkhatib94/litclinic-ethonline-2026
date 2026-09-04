@@ -4,7 +4,7 @@
 
 This repository is the standalone workspace for new LitClinic functionality developed during ETHOnline 2026. It starts as a minimal, security-conscious monorepo so the event architecture can evolve without exposing or coupling to the private production application.
 
-Current status: Phase 1 implements a read-only Care Agent Context Layer with a typed SDK, mock and remote providers, and a minimal API.
+Current status: Phase 1 implements the private LitClinic context boundary. Phase 2 adds a live The Graph provider and deterministic action planning that requires fresh onchain evidence.
 
 ## Existing LitClinic Product
 
@@ -22,7 +22,9 @@ The extension is intended to support independently deployable modules for:
 - Onchain data access
 - A web or API surface when required
 
-Phase 1 provides sanitized wallet context for a future healthcare coordination agent. It does not expose medical records or clinical data, run AI inference, request payments, or execute transactions.
+The current extension provides sanitized wallet context for a future healthcare coordination agent. The Graph path queries live Uniswap V3 Ethereum activity and uses freshness and observed wallet activity to decide whether a workflow may continue or must require approval.
+
+It does not expose medical records or clinical data, run medical inference, request payments, or execute transactions.
 
 ## Architecture
 
@@ -30,9 +32,10 @@ The repository is organized around explicit boundaries:
 
 1. Applications consume shared packages and integration adapters.
 2. The SDK owns communication with approved LitClinic interfaces.
-3. Partner adapters remain independent from each other.
-4. Smart contracts expose reviewed onchain interfaces.
-5. Secrets and private LitClinic implementation details stay outside this repository.
+3. The Graph integration supplies live, allowlisted onchain activity evidence.
+4. The deterministic agent core combines both sources and fails closed when Graph evidence is missing, stale, or inactive.
+5. Partner adapters remain independent from each other.
+6. Secrets and private LitClinic implementation details stay outside this repository.
 
 See [Architecture](docs/architecture.md), [Integration Boundary](docs/integration.md), and [Care Agent Context Layer](docs/context-layer.md).
 
@@ -43,16 +46,18 @@ apps/
   web/          Optional public web application
   api/          Care Agent Context HTTP API
 packages/
+  agent-core/   Deterministic context composition and planning
   sdk/          Typed authenticated LitClinic client
   shared/       Validated public context contract
   config/       Validated extension configuration
 contracts/      Hackathon-specific smart contracts
-integrations/   Independent partner adapters
+integrations/
+  the-graph/    Live Uniswap V3 subgraph provider
 docs/           Architecture, security, and disclosure
 scripts/        Local validation utilities
 ```
 
-The web application, partner adapters, AI inference, payments, and smart contracts remain intentionally unimplemented.
+The web application, AI inference, payment execution, and smart contracts remain intentionally unimplemented.
 
 ## Development
 
@@ -91,6 +96,8 @@ The Phase 1 configuration contract covers:
 - Approved LitClinic API base URL
 - Scoped service token
 - Configurable context endpoint path
+- The Graph Network API key
+- Optional Graph gateway and subgraph overrides
 - Local API port
 
 No production values are included.
@@ -109,9 +116,13 @@ See [ETHOnline Disclosure](docs/ethonline-disclosure.md).
 
 ## Partner Integrations
 
-[To be implemented during ETHOnline]
+### The Graph
 
-No partner integration is claimed or configured yet. Each selected integration will use an isolated adapter and document its required permissions and data flow.
+The first adapter queries the Uniswap V3 Ethereum Subgraph through The Graph Network gateway. It requests wallet-originated swap activity plus index metadata, converts the result to a strict public context, and supplies that evidence to the decision engine.
+
+The decision engine requires approval when Graph data is stale, the index reports errors, no wallet activity is observed, or observed activity is too old. A normal workflow can continue only when both LitClinic permission and live Graph evidence pass.
+
+The integration is implemented and covered by offline tests. ETHOnline qualification is not yet claimed because no live gateway query has been demonstrated in this repository session.
 
 ## Demo
 
@@ -122,6 +133,14 @@ bun run demo:context 0x0000000000000000000000000000000000000001
 ```
 
 The same command uses the remote provider when remote mode and its required environment variables are configured. It never prints the service token.
+
+Run the load-bearing live Graph demonstration after placing a scoped Graph API key in an ignored local environment file:
+
+```bash
+bun run demo:agent-plan 0x0000000000000000000000000000000000000001 continue_workflow
+```
+
+The command succeeds only after a live Graph query and prints the resulting deterministic `continue` or `require_approval` plan. It never prints the Graph API key.
 
 ## License
 
