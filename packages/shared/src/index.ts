@@ -6,6 +6,11 @@ export {
   type CareAgentContext,
   type CareAgentContextV1,
 } from "./care-agent-context";
+export {
+  graphOnchainContextV1Schema,
+  type GraphOnchainContext,
+  type GraphOnchainContextV1,
+} from "./graph-onchain-context";
 
 export type ApiSuccess<T> = {
   ok: true;
