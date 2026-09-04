@@ -24,7 +24,8 @@
     "type-check": "bunx tsc --project tsconfig.json --noEmit",
     "secret:scan": "node scripts/scan-secrets.mjs",
     "world:address": "bun run scripts/world-address.ts",
-    "world:status": "bun run scripts/world-status.ts"
+    "world:status": "bun run scripts/world-status.ts",
+    "demo:world:sandbox": "bun run scripts/demo-world-sandbox.ts"
   },
   "devDependencies": {
     "@types/bun": "^1.3.0",

@@ -25,3 +25,23 @@ export {
   createWorldAgentSignerRuntime,
   type WorldAgentSignerRuntime,
 } from "./signer";
+export {
+  createSandboxSelfieProviderFromEnv,
+  parseWorldMode,
+  readSandboxSelfieConfig,
+  SandboxSelfieCheckProvider,
+  type SandboxSelfieConfig,
+  type SandboxSelfieProvider,
+} from "./sandbox-selfie";
+export {
+  createConfiguredSandboxProvider,
+  createSandboxSelfieSession,
+  verifySandboxSelfieProof,
+  type CreateSandboxSelfieSessionInput,
+  type SandboxSelfieSession,
+} from "./sandbox-session";
+export {
+  buildWorldAuthorizationSummary,
+  printWorldAuthorizationSummary,
+  type BuildWorldAuthorizationSummaryInput,
+} from "./world-summary";

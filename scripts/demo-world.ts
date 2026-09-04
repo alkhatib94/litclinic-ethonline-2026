@@ -5,7 +5,13 @@ import {
 } from "../packages/agent-core/src";
 import { createContextProviderFromEnv } from "../apps/api/src/providers/factory";
 import { createTheGraphProviderFromEnv } from "../integrations/the-graph/src";
-import { createWorldAgentRuntimeFromEnv } from "../integrations/world-agentkit/src";
+import {
+  buildWorldAuthorizationSummary,
+  createSandboxSelfieProviderFromEnv,
+  createWorldAgentRuntimeFromEnv,
+  parseWorldMode,
+  printWorldAuthorizationSummary,
+} from "../integrations/world-agentkit/src";
 import {
   ethereumAddressSchema,
   type AgentActionKind,
@@ -28,8 +34,10 @@ if (!userWalletResult.success || !action) {
 const userWallet = userWalletResult.data;
 
 try {
+  const worldMode = parseWorldMode(process.env.WORLD_MODE);
   const worldRuntime = createWorldAgentRuntimeFromEnv(process.env);
   const agentAddress = worldRuntime.agentAddress;
+  const sandboxProvider = createSandboxSelfieProviderFromEnv(process.env);
 
   if (agentAddress.toLowerCase() !== EXPECTED_AGENT_ADDRESS.toLowerCase()) {
     console.error("WORLD_AGENT_SIGNER_MISMATCH");
@@ -59,7 +67,7 @@ try {
   assertUserWalletContext(context.onchain.wallet.address, userWallet);
 
   const reasoning = planAgentAction(context, { action });
-  const worldAuthorization = await authorizeAgentPlan({
+  const productionAuthorization = await authorizeAgentPlan({
     plan: reasoning,
     userWallet,
     agentAddress,
@@ -70,26 +78,59 @@ try {
   });
 
   if (
-    worldAuthorization.worldStatus &&
-    worldAuthorization.worldStatus.agentAddress.toLowerCase() !==
+    productionAuthorization.worldStatus &&
+    productionAuthorization.worldStatus.agentAddress.toLowerCase() !==
       agentAddress.toLowerCase()
   ) {
     throw new Error("AgentBook result did not match the configured agent wallet.");
   }
-  if (worldAuthorization.reason === "verification-unavailable") {
+  if (
+    reasoning.decision === "require_approval" &&
+    productionAuthorization.reason === "verification-unavailable"
+  ) {
     throw new Error("Required World AgentKit verification could not be completed.");
   }
 
-  printSummary({
-    userWallet,
+  const sandboxStatus = sandboxProvider.getStatus({ verified: false });
+
+  const summary = buildWorldAuthorizationSummary({
+    worldEnvironment: worldMode,
+    productionAuthorization,
+    sandboxStatus,
     agentAddress,
-    graphFreshnessSeconds: context.onchain.indexing.freshnessSeconds,
-    careDecision: reasoning.decision,
-    worldUsed: worldAuthorization.worldVerificationUsed,
-    registered: worldAuthorization.worldStatus?.registered ?? false,
-    humanBacked: worldAuthorization.worldStatus?.humanBacked ?? false,
-    finalAllowed: worldAuthorization.authorized,
   });
+
+  console.log(`USER WALLET: ${userWallet}`);
+  console.log(`AGENT WALLET: ${agentAddress}`);
+  console.log("LIVE THE GRAPH: YES");
+  console.log(
+    `THE GRAPH FRESHNESS: ${
+      context.onchain.indexing.freshnessSeconds === undefined
+        ? "unknown"
+        : `${context.onchain.indexing.freshnessSeconds}s`
+    }`,
+  );
+  console.log(`CARE AGENT DECISION: ${reasoning.decision}`);
+  console.log(
+    `LIVE WORLD AGENTKIT: ${
+      productionAuthorization.worldVerificationUsed ? "YES" : "SKIPPED"
+    }`,
+  );
+  console.log(
+    `AGENTBOOK REGISTERED: ${
+      productionAuthorization.worldStatus?.registered ? "YES" : "NO"
+    }`,
+  );
+  console.log(
+    `HUMAN-BACKED AGENT: ${
+      productionAuthorization.worldStatus?.humanBacked
+        ? "VERIFIED"
+        : "NOT VERIFIED"
+    }`,
+  );
+  console.log("");
+  printWorldAuthorizationSummary(summary);
+  console.log("");
 
   console.log(
     JSON.stringify(
@@ -99,10 +140,13 @@ try {
           agentAddress,
           projectWalletNotUsed: PROJECT_WALLET,
         },
+        worldMode,
         context,
         reasoning,
-        worldAuthorization,
-        finalExecutionPermission: worldAuthorization.authorized,
+        productionAuthorization,
+        sandboxStatus,
+        worldSummary: summary,
+        finalExecutionPermission: summary.finalExecutionPermission,
       },
       null,
       2,
@@ -125,37 +169,6 @@ function assertUserWalletContext(actual: Address, expected: Address): void {
   if (actual.toLowerCase() !== expected.toLowerCase()) {
     throw new Error("Graph/LitClinic context wallet did not match USER WALLET.");
   }
-}
-
-function printSummary(input: {
-  userWallet: Address;
-  agentAddress: Address;
-  graphFreshnessSeconds?: number;
-  careDecision: string;
-  worldUsed: boolean;
-  registered: boolean;
-  humanBacked: boolean;
-  finalAllowed: boolean;
-}): void {
-  console.log(`USER WALLET: ${input.userWallet}`);
-  console.log(`AGENT WALLET: ${input.agentAddress}`);
-  console.log("LIVE THE GRAPH: YES");
-  console.log(
-    `THE GRAPH FRESHNESS: ${
-      input.graphFreshnessSeconds === undefined
-        ? "unknown"
-        : `${input.graphFreshnessSeconds}s`
-    }`,
-  );
-  console.log(`CARE AGENT DECISION: ${input.careDecision}`);
-  console.log(`LIVE WORLD AGENTKIT: ${input.worldUsed ? "YES" : "SKIPPED"}`);
-  console.log(`AGENTBOOK REGISTERED: ${input.registered ? "YES" : "NO"}`);
-  console.log(
-    `HUMAN-BACKED AGENT: ${input.humanBacked ? "VERIFIED" : "NOT VERIFIED"}`,
-  );
-  console.log(
-    `FINAL EXECUTION PERMISSION: ${input.finalAllowed ? "ALLOWED" : "BLOCKED"}`,
-  );
 }
 
 function parseAction(value: string | undefined): AgentActionKind | null {

@@ -23,10 +23,18 @@ export {
   agentAuthorizationReasonSchema,
   agentAuthorizationResultSchema,
   humanBackedAgentStatusSchema,
+  sandboxSelfieStatusSchema,
+  verificationSourceSchema,
+  worldAuthorizationSummarySchema,
+  worldEnvironmentSchema,
   type AgentAuthorizationReason,
   type AgentAuthorizationResult,
   type FinalAgentPlan,
   type HumanBackedAgentStatus,
+  type SandboxSelfieStatus,
+  type VerificationSource,
+  type WorldAuthorizationSummary,
+  type WorldEnvironment,
 } from "./world-agent-authorization";
 
 export type ApiSuccess<T> = {

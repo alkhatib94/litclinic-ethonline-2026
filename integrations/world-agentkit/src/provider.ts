@@ -112,6 +112,10 @@ export class LiveWorldAgentAuthorizationProvider
       humanBacked: registered,
       checkedAt: checkedAt.toISOString(),
       live: true,
+      worldEnvironment: "production",
+      verificationSource: registered
+        ? "agentbook-production"
+        : "unverified",
     });
     if (!parsed.success) throw new WorldAgentkitMalformedResultError();
     return parsed.data;
@@ -162,6 +166,10 @@ export class MockWorldAgentAuthorizationProvider
       humanBacked: this.#humanBacked,
       checkedAt: this.#checkedAt.toISOString(),
       live: false,
+      worldEnvironment: "production",
+      verificationSource: this.#humanBacked
+        ? "agentbook-production"
+        : "unverified",
     });
   }
 }
