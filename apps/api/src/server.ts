@@ -1,8 +1,13 @@
+import { createTheGraphProviderFromEnv } from "@litclinic-ethonline/the-graph";
+
 import { createApiApp } from "./app";
 import { createContextProviderFromEnv } from "./providers/factory";
 
 const provider = createContextProviderFromEnv(process.env);
-const app = createApiApp({ provider });
+const onchainProvider = process.env.THE_GRAPH_API_KEY?.trim()
+  ? createTheGraphProviderFromEnv(process.env)
+  : undefined;
+const app = createApiApp({ provider, onchainProvider });
 const port = parsePort(process.env.PORT);
 
 export default {

@@ -14,9 +14,26 @@
       "name": "@litclinic-ethonline/api",
       "version": "0.0.0",
       "dependencies": {
+        "@litclinic-ethonline/agent-core": "workspace:*",
         "@litclinic-ethonline/sdk": "workspace:*",
         "@litclinic-ethonline/shared": "workspace:*",
+        "@litclinic-ethonline/the-graph": "workspace:*",
         "hono": "^4.9.0",
+      },
+    },
+    "integrations/the-graph": {
+      "name": "@litclinic-ethonline/the-graph",
+      "version": "0.0.0",
+      "dependencies": {
+        "@litclinic-ethonline/shared": "workspace:*",
+        "zod": "^4.1.5",
+      },
+    },
+    "packages/agent-core": {
+      "name": "@litclinic-ethonline/agent-core",
+      "version": "0.0.0",
+      "dependencies": {
+        "@litclinic-ethonline/shared": "workspace:*",
       },
     },
     "packages/config": {
@@ -44,6 +61,8 @@
 
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.6.0", "", {}, "sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw=="],
 
+    "@litclinic-ethonline/agent-core": ["@litclinic-ethonline/agent-core@workspace:packages/agent-core"],
+
     "@litclinic-ethonline/api": ["@litclinic-ethonline/api@workspace:apps/api"],
 
     "@litclinic-ethonline/config": ["@litclinic-ethonline/config@workspace:packages/config"],
@@ -51,6 +70,8 @@
     "@litclinic-ethonline/sdk": ["@litclinic-ethonline/sdk@workspace:packages/sdk"],
 
     "@litclinic-ethonline/shared": ["@litclinic-ethonline/shared@workspace:packages/shared"],
+
+    "@litclinic-ethonline/the-graph": ["@litclinic-ethonline/the-graph@workspace:integrations/the-graph"],
 
     "@noble/ciphers": ["@noble/ciphers@1.3.0", "", {}, "sha512-2I0gnIVPtfnMw9ee9h1dJG7tp81+8Ob3OJb3Mv37rx5L40/b0i7djjCVvGOVqc9AEIQyvyu1i6ypKdFw8R8gQw=="],
 

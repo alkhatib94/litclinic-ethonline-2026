@@ -7,8 +7,10 @@
     "start": "bun run src/server.ts"
   },
   "dependencies": {
+    "@litclinic-ethonline/agent-core": "workspace:*",
     "@litclinic-ethonline/sdk": "workspace:*",
     "@litclinic-ethonline/shared": "workspace:*",
+    "@litclinic-ethonline/the-graph": "workspace:*",
     "hono": "^4.9.0"
   }
 }

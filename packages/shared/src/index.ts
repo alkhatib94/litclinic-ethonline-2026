@@ -7,6 +7,14 @@ export {
   type CareAgentContextV1,
 } from "./care-agent-context";
 export {
+  agentContextV1Schema,
+  type AgentActionKind,
+  type AgentActionPlan,
+  type AgentContext,
+  type AgentContextV1,
+  type AgentDecisionReason,
+} from "./agent-context";
+export {
   graphOnchainContextV1Schema,
   type GraphOnchainContext,
   type GraphOnchainContextV1,
