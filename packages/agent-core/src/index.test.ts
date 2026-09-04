@@ -2,11 +2,13 @@ import type {
   AgentContext,
   CareAgentContext,
   GraphOnchainContext,
+  HumanBackedAgentStatus,
 } from "@litclinic-ethonline/shared";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   AgentContextValidationError,
+  authorizeAgentPlan,
   composeAgentContext,
   planAgentAction,
 } from "./index";
@@ -75,6 +77,21 @@ function agentContext(onchain = graphContext()): AgentContext {
       composedAt: NOW.toISOString(),
       sources: ["litclinic", "the-graph"],
     },
+  };
+}
+
+function worldStatus(
+  registered: boolean,
+  humanBacked: boolean,
+): HumanBackedAgentStatus {
+  return {
+    version: "1",
+    provider: "world-agentkit",
+    agentAddress: WALLET,
+    registered,
+    humanBacked,
+    checkedAt: NOW.toISOString(),
+    live: true,
   };
 }
 
@@ -168,5 +185,111 @@ describe("agent context and decision engine", () => {
         clock: () => NOW,
       }),
     ).rejects.toBeInstanceOf(AgentContextValidationError);
+  });
+
+  it("authorizes an approval-required plan for a human-backed agent", async () => {
+    const plan = planAgentAction(
+      agentContext(
+        graphContext({
+          observedSwapCount: 0,
+          hasObservedActivity: false,
+          lastActivityAt: undefined,
+        }),
+      ),
+      { action: "continue_workflow", now: NOW },
+    );
+
+    const authorization = await authorizeAgentPlan({
+      plan,
+      agentAddress: WALLET,
+      worldSource: {
+        resolveAgent: async () => worldStatus(true, true),
+      },
+    });
+
+    expect(authorization).toMatchObject({
+      authorized: true,
+      reason: "verified-human-backed-agent",
+      worldVerificationUsed: true,
+    });
+  });
+
+  it("blocks an approval-required plan for an unverified agent", async () => {
+    const plan = planAgentAction(
+      agentContext(
+        graphContext({
+          observedSwapCount: 0,
+          hasObservedActivity: false,
+          lastActivityAt: undefined,
+        }),
+      ),
+      { action: "continue_workflow", now: NOW },
+    );
+
+    const authorization = await authorizeAgentPlan({
+      plan,
+      agentAddress: WALLET,
+      worldSource: {
+        resolveAgent: async () => worldStatus(false, false),
+      },
+    });
+
+    expect(authorization).toMatchObject({
+      authorized: false,
+      reason: "agent-not-registered",
+      worldVerificationUsed: true,
+    });
+  });
+
+  it("fails closed when World verification is unavailable", async () => {
+    const plan = planAgentAction(
+      agentContext(
+        graphContext({
+          observedSwapCount: 0,
+          hasObservedActivity: false,
+          lastActivityAt: undefined,
+        }),
+      ),
+      { action: "continue_workflow", now: NOW },
+    );
+
+    const authorization = await authorizeAgentPlan({
+      plan,
+      agentAddress: WALLET,
+      worldSource: {
+        resolveAgent: async () => {
+          throw new Error("World unavailable");
+        },
+      },
+    });
+
+    expect(authorization).toEqual({
+      version: "1",
+      authorized: false,
+      reason: "verification-unavailable",
+      worldVerificationUsed: true,
+    });
+  });
+
+  it("skips World lookup when approval is not required", async () => {
+    const resolveAgent = vi.fn(async () => worldStatus(true, true));
+    const plan = planAgentAction(agentContext(), {
+      action: "continue_workflow",
+      now: NOW,
+    });
+
+    const authorization = await authorizeAgentPlan({
+      plan,
+      agentAddress: WALLET,
+      worldSource: { resolveAgent },
+    });
+
+    expect(authorization).toEqual({
+      version: "1",
+      authorized: true,
+      reason: "approval-not-required",
+      worldVerificationUsed: false,
+    });
+    expect(resolveAgent).not.toHaveBeenCalled();
   });
 });

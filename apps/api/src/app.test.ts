@@ -1,4 +1,5 @@
 import type { GraphOnchainContext } from "@litclinic-ethonline/shared";
+import { MockWorldAgentAuthorizationProvider } from "@litclinic-ethonline/world-agentkit";
 import { describe, expect, it } from "vitest";
 
 import { createApiApp } from "./app";
@@ -18,6 +19,7 @@ describe("care agent context API", () => {
       status: "healthy",
       mode: "mock",
       graph: "unconfigured",
+      world: "unconfigured",
     });
   });
 
@@ -105,6 +107,11 @@ describe("care agent context API", () => {
       onchainProvider: {
         getContext: async () => graphContext,
       },
+      worldProvider: new MockWorldAgentAuthorizationProvider({
+        registered: true,
+        humanBacked: true,
+      }),
+      configuredAgentAddress: WALLET,
     });
 
     const response = await graphApp.request(
@@ -116,7 +123,7 @@ describe("care agent context API", () => {
     expect(body).toMatchObject({
       ok: true,
       data: {
-        plan: {
+        reasoning: {
           decision: "require_approval",
           reasons: ["NO_OBSERVED_ONCHAIN_ACTIVITY"],
           evidence: {
@@ -124,7 +131,44 @@ describe("care agent context API", () => {
             indexedBlockNumber: 23_456_789,
           },
         },
+        worldAuthorization: {
+          authorized: true,
+          reason: "verified-human-backed-agent",
+          worldVerificationUsed: true,
+          worldStatus: {
+            registered: true,
+            humanBacked: true,
+            live: false,
+          },
+        },
+        finalExecutionPermission: true,
       },
     });
+  });
+
+  it("returns normalized World status without a human identifier", async () => {
+    const worldApp = createApiApp({
+      provider: new MockLitClinicContextProvider(),
+      worldProvider: new MockWorldAgentAuthorizationProvider({
+        registered: true,
+        humanBacked: true,
+      }),
+    });
+
+    const response = await worldApp.request(`/api/v1/world/agent/${WALLET}`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      data: {
+        provider: "world-agentkit",
+        agentAddress: WALLET,
+        registered: true,
+        humanBacked: true,
+        live: false,
+      },
+    });
+    expect(JSON.stringify(body)).not.toMatch(/humanId|nullifier|proof/i);
   });
 });
