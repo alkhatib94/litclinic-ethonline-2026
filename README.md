@@ -1,5 +1,29 @@
 # LitClinic - ETHOnline 2026
 
+## Built for ETHOnline 2026
+
+LitClinic existed before ETHOnline 2026 as a health-themed Web3 product and healthcare UX/product concept. This repository does **not** contain that existing application. It contains the **new agentic trust / onchain context layer** designed and implemented during ETHOnline 2026. Only work committed to this repository during the event is presented as hackathon work (see [ETHOnline Disclosure](docs/ethonline-disclosure.md)).
+
+### Pre-existing LitClinic
+
+- Existing LitClinic product: healthcare product concept and existing Web3 UI/UX on LitVM LiteForge.
+- Production application and source code predate ETHOnline 2026 and remain private.
+- The pre-existing LitClinic UI was **not** built during ETHOnline 2026 and is not included in this repository.
+
+### Built during ETHOnline 2026
+
+New work contained in this repository only:
+
+- Agentic context layer: sanitized Care Agent Context v1 contract, typed SDK, and mock/remote providers.
+- The Graph integration: live Uniswap V3 Ethereum onchain-context provider (freshness, indexing errors, observed wallet activity evidence).
+- Deterministic fail-closed execution policy: reasoning engine that requires approval when live onchain evidence is missing, stale, or inactive.
+- World AgentKit integration: AgentBook resolution into registration and human-backed booleans, with user/agent wallet role separation.
+- World ID / human-verification workflow implementation: Sandbox Selfie Check mode (see note below).
+- API / SDK / agent infrastructure: Context HTTP API, shared schemas, CI, and secret scanning.
+- Hackathon-specific tests, demo scripts, and documentation.
+
+> **World ID Sandbox note:** the World ID Sandbox Selfie Check integration is implemented locally, but Android end-to-end testing is currently pending external Google Play Internal Test access approval. Live E2E completion is **not** claimed.
+
 ## Overview
 
 This repository is the standalone workspace for new LitClinic functionality developed during ETHOnline 2026. It starts as a minimal, security-conscious monorepo so the event architecture can evolve without exposing or coupling to the private production application.
