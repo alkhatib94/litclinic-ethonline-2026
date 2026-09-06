@@ -143,6 +143,26 @@ LitClinic existed before ETHOnline 2026. Only work committed to this repository 
 
 See [ETHOnline Disclosure](docs/ethonline-disclosure.md).
 
+## Uniswap V3 Integration
+
+LitClinic uses live Uniswap V3 Ethereum swap activity as a read-oriented onchain context signal for agent trust and authorization. The integration does not execute trades and does not use the Uniswap API.
+
+Wallet-level Uniswap V3 swap activity and recent protocol activity are retrieved through The Graph, then normalized into structured evidence (observed swap count, latest wallet activity, latest transaction hash when available, protocol freshness, indexing state, and provenance). The deterministic agent policy consumes that evidence and fails closed: stale, missing, inactive, or insufficient Uniswap-derived context yields `require_approval` rather than allowing the workflow to continue blindly.
+
+Uniswap developer feedback: [FEEDBACK.md](./FEEDBACK.md)
+
+### Relevant code
+
+- [integrations/the-graph/src/query.ts](./integrations/the-graph/src/query.ts) - Uniswap V3 wallet/protocol swap GraphQL query
+- [integrations/the-graph/src/provider.ts](./integrations/the-graph/src/provider.ts) - normalization into structured Uniswap-derived onchain context
+- [packages/agent-core/src/index.ts](./packages/agent-core/src/index.ts) - deterministic fail-closed policy consumer (`planAgentAction`)
+
+Public links for judges:
+
+- https://github.com/alkhatib94/litclinic-ethonline-2026/blob/main/integrations/the-graph/src/query.ts
+- https://github.com/alkhatib94/litclinic-ethonline-2026/blob/main/integrations/the-graph/src/provider.ts
+- https://github.com/alkhatib94/litclinic-ethonline-2026/blob/main/packages/agent-core/src/index.ts#L95-L160
+
 ## Partner Integrations
 
 ### The Graph
