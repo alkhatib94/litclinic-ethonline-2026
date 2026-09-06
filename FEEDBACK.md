@@ -1,8 +1,8 @@
-﻿# Uniswap Developer Feedback â€” ETHOnline 2026
+﻿# Uniswap Developer Feedback - ETHOnline 2026
 
 ## Project
 
-LitClinic â€” Agentic Trust for Web3 Healthcare
+LitClinic - Agentic Trust for Web3 Healthcare
 
 Repository:
 https://github.com/alkhatib94/litclinic-ethonline-2026
@@ -29,7 +29,7 @@ This submission does **not** execute trades and does **not** use the Uniswap API
 
 ## Suggestions
 
-1. Publish a short â€œUniswap as onchain contextâ€ guide for agent and authorization use cases (no trading required).
+1. Publish a short "Uniswap as onchain context" guide for agent and authorization use cases (no trading required).
 2. Add reference GraphQL queries for wallet activity, protocol freshness, and indexing health suitable for fail-closed agent policies.
 3. Document recommended freshness windows and indexing-error handling patterns for agent workflows.
 4. Provide examples that connect indexed Uniswap V3 activity to authorization or risk decisions rather than only to quote/swap flows.
